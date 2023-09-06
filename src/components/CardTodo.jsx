@@ -1,7 +1,9 @@
 'use client'
 import React, { useEffect, useState } from 'react';
-import { createTodo, getAllTodo, updateTodo } from '@/api/fetch';
+import { createTodo, getAllTodo, updateTodo, deleteTodo} from '@/api/fetch';
 import { toast } from 'react-toastify';
+import { FaTrash } from 'react-icons/fa';
+
 
 const CardTodo = () => {
   const [isForm, setIsForm] = useState(false);
@@ -40,11 +42,34 @@ const CardTodo = () => {
         });
       }
     } catch (error) {
+      if (error.message == 'todos is not iterable') {
+        window.location.reload()
+      }
       console.error(error);
     }
   }
 
-  
+  const handleDelete = async (todoId) => {
+    try {
+      const response = await deleteTodo(todoId)
+      if (response) {
+        toast.success('Delete todo success', {
+          position: 'top-right',
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: 'light',
+        });
+        fetchAllTodo()
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   const handleChangeCheckBox = async (todoId, event) => {
     try {
       const stats = event.target.checked ? 'Done' : 'Procces';
@@ -92,13 +117,21 @@ const CardTodo = () => {
       <div className='flex flex-col border-b p-5'>
         {todos && todos.length > 0 ? (
           todos.map(todoItem => (
-            <div key={todoItem.id} className='flex justify-start items-center'>
-              <input
-                onChange={() => handleChangeCheckBox(todoItem.id, event)}
-                type="checkbox"
-                checked={todoItem.status === 'Done'}
-              />
-              <p className={`text-lg font-medium ml-2 ${todoItem.status === 'Done' ? 'line-through' : ''}`}>{todoItem.task_name}</p>
+            <div key={todoItem.id} className='flex justify-between items-center'>
+              <div className='flex justify-start items-center'>
+                <input
+                  onChange={() => handleChangeCheckBox(todoItem.id, event)}
+                  type="checkbox"
+                  checked={todoItem.status === 'Done'}
+                />
+                <p className={`text-lg font-medium ml-2 ${todoItem.status === 'Done' ? 'line-through' : ''}`}>{todoItem.task_name}</p>
+              </div>
+              <button
+                className='text-red-500 hover:text-red-700'
+                onClick={() => handleDelete(todoItem.id)}
+              >
+                <FaTrash />
+              </button>
             </div>
           ))
         ) : isForm ? null : (
